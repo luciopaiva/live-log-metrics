@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Metrics</title>
+
+    <style>
+        body {
+            background-color: #222;
+            color: #ccc;
+            font-family: monospace;
+        }
+        table {
+            width: 100%;
+            table-layout: fixed;
+        }
+        table td:first-child {
+            width: 40%;
+        }
+        .name {
+        }
+        .value {
+        }
+    </style>
+</head>
+<body>
+<table id="metrics"></table>
+
+<script type="text/javascript">
+    const table = document.getElementById("metrics");
+
+    function numberWithCommas(x) {  // https://stackoverflow.com/a/2901298/778272
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function updateMetrics(metrics) {
+        Object.keys(metrics).forEach(metricName => {
+            const metricValues = metrics[metricName];
+
+            let row = document.getElementById(metricName);
+            if (!row) {
+                row = document.createElement("tr");
+                row.setAttribute("id", metricName);
+
+                const tdName = document.createElement("td");
+                tdName.classList.add("name");
+                tdName.innerText = metricName;
+                row.appendChild(tdName);
+
+                for (let i = 0; i < metricValues.length; i++) {
+                    const metricValue = document.createElement("td");
+                    metricValue.classList.add("value");
+                    row.appendChild(metricValue);
+                }
+
+                table.appendChild(row);
+            }
+
+            const valueCells = row.querySelectorAll("td.value");
+            valueCells.forEach((cell, i) => {
+                let val = metricValues[i];
+                if (/^\d+$/.test(val)) {
+                    val = numberWithCommas(val);
+                }
+                cell.innerText = val;
+            });
+        });
+    }
+
+    const sse = new EventSource("/metrics");
+    sse.addEventListener("metrics", event => updateMetrics(JSON.parse(event.data)));
+</script>
+
+</body>
+</html>
